@@ -1,20 +1,31 @@
 package de.jojii.matrixclientserver.Bot;
 
-import de.jojii.matrixclientserver.Callbacks.DataCallback;
-import de.jojii.matrixclientserver.Callbacks.EmptyCallback;
-import de.jojii.matrixclientserver.Networking.HttpHelper;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+import java.io.IOException;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.matchers.Any;
 
-import java.io.IOException;
-
-import static org.mockito.Mockito.*;
+import de.jojii.matrixclientserver.Callbacks.DataCallback;
+import de.jojii.matrixclientserver.Callbacks.EmptyCallback;
+import de.jojii.matrixclientserver.Networking.HttpHelper;
 
 class ClientTest {
 
-    private final HttpHelper httpHelper = Mockito.mock(HttpHelper.class);
+	private final HttpHelper httpHelper = Mockito.mock(HttpHelper.class, withSettings().verboseLogging());
 
     @Test
     void joinRoom_notLoggedIn() throws IOException {
@@ -87,4 +98,24 @@ class ClientTest {
 
         verify(onGone, times(1)).onRun();
     }
+
+	@Test
+	void resolveRoomAliasSync() throws IOException {
+
+		final String expectedURL = "_matrix/client/r0/directory/room";
+
+		final Client client = new Client(httpHelper, true);
+
+		JSONObject jsonResponse = new JSONObject();
+		jsonResponse.put("room_id", "!hCBUUsLgnlXIvwmnkT:starship-enterprise.com");
+		JSONArray servers = new JSONArray();
+		servers.put("starship-enterprise.com");
+		jsonResponse.put("servers", servers);
+
+		when(httpHelper.sendRequest(isNull(), startsWith(expectedURL), isNull(), eq(true), eq("GET")))
+				.thenReturn(jsonResponse.toString());
+
+		String resolvedId = client.resolveRoomAliasSync("#holodeck:starship-enterprise.com");
+		assertEquals("!hCBUUsLgnlXIvwmnkT:starship-enterprise.com", resolvedId);
+	}
 }

@@ -164,6 +164,29 @@ public class Client {
         });
     }
 
+	/**
+	 * Requests that the server resolve a room alias to a room ID.
+	 * 
+	 * @param roomID
+	 * @return the resolved room id or <code>null</code> if no room_id value was
+	 *         found
+	 * @throws IOException
+	 * @see https://spec.matrix.org/v1.11/client-server-api/#get_matrixclientv3directoryroomroomalias
+	 */
+	public String resolveRoomAliasSync(String roomID) throws IOException {
+		if (roomID.startsWith("#")) {
+			String response = httpHelper.sendRequest(host, HttpHelper.URLs.directory + "room/" + roomID, null, true,
+					"GET");
+			JSONObject object = new JSONObject(response);
+			if (object.has("room_id")) {
+				return object.getString("room_id");
+			} else {
+				return null;
+			}
+		}
+		return roomID;
+	}
+
     public void sendText(String roomID, String message, DataCallback response) throws IOException {
         sendText(roomID, message, false, "", response);
     }

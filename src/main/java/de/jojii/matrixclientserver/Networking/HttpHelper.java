@@ -15,6 +15,7 @@ public class HttpHelper {
         public static String client = root+"client/r0/";
         public static String media = root+"media/r0/";
 
+		public static String directory = client + "directory/";
         public static String login = client+"login";
         public static String logout = client+"logout";
         public static String logout_all = client+"logout/all";
